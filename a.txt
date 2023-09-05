@@ -1,0 +1,86 @@
+controller.js
+const db = require('../db/index');
+const User = require('../models/userModel');
+
+exports.getHome = (req, res) => res.sendFile(__dirname + "/index.html");
+exports.getSignup = (req, res) => res.sendFile(__dirname + "/Signup.html");
+
+
+exports.postLogin = async (req, res) => {
+    try {
+        const user = await User.findOne({ email: req.body.email });
+        if(user) {
+            // Check password and other logic...
+            // res.redirect() or other responses...
+        } else {
+            // Handle no user found...
+        }
+    } catch (error) {
+        console.error('Error finding user by email:', error.message);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+exports.postSignup = async (req, res) => {
+    try {
+        const newUser = new User(req.body);
+        await newUser.save();
+        res.redirect('/log');
+    } catch(error) {
+        console.error('Error adding new user:', error.message);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+
+routes.js
+
+const express = require('express');
+const router = express.Router();
+
+const {
+    getHome,
+    getSignup,
+    getLogin,
+    getContact,
+    getGuest,
+    getUser,
+    postLogin,
+    postSignup
+} = require('../controllers/control');
+
+router.get('/', getHome);
+router.get('/sign', getSignup);
+router.get('/log', getLogin);
+router.get('/contact', getContact);
+router.get('/guest', getGuest);
+router.get('/user', getUser);
+router.post('/logg', postLogin);
+router.post('/signup', postSignup);
+
+module.exports = router;
+
+
+server.js
+const express = require('express');
+const bodyParser = require('body-parser');
+const routes = require('./routes/route');
+const Connection = require('./db/index');
+
+const app = express();
+const dbUsername = process.env.DB_USERNAME;
+const dbPassword = process.env.DB_PASSWORD;
+
+// Middlewares
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use('/static', express.static('public'));
+
+Connection(dbUsername, dbPassword);
+
+// Routes
+app.use(routes);
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, console.log(`Server started on port ${PORT}`));
